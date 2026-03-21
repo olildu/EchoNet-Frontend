@@ -11,8 +11,8 @@ A high-performance, real-time disaster coordination and response platform built 
 ## 📺 Demo
 
 <p align="center">
-  <a href="YOUR_VIDEO_URL_HERE">
-    <img src="https://img.youtube.com/vi/YOUR_VIDEO_ID/0.jpg" alt="EchoNet Demo" width="500">
+  <a href="https://youtu.be/HdIgbg-pKwM">
+    <img src="https://img.youtube.com/vi/HdIgbg-pKwM/0.jpg" alt="EchoNet Demo" width="500">
   </a>
 </p>
 
