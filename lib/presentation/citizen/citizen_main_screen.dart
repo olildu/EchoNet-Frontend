@@ -16,7 +16,7 @@ class CitizenMainScreen extends StatefulWidget {
 class _CitizenMainScreenState extends State<CitizenMainScreen> {
   int _selectedIndex = 0;
 
-  final _pages = [CitizenDashboard(), MapsScreen(), ReportsScreen(), SettingsScreen()];
+  final _pages = [CitizenDashboard(), ReportsScreen(), MapsScreen(), SettingsScreen()];
 
   @override
   Widget build(BuildContext context) {
