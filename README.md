@@ -11,8 +11,12 @@ A high-performance, real-time disaster coordination and response platform built 
 ## 📺 Demo
 
 <p align="center">
+  <img src="https://github.com/olildu/EchoNet-Frontend/blob/main/project_assets/echonet_demo.gif?raw=true" width="500">
+</p>
+
+<p align="center">
   <a href="https://youtu.be/HdIgbg-pKwM">
-    <img src="https://img.youtube.com/vi/HdIgbg-pKwM/0.jpg" alt="EchoNet Demo" width="500">
+    ▶️ Watch Full Demo on YouTube
   </a>
 </p>
 
