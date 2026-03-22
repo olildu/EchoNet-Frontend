@@ -17,6 +17,8 @@ import 'package:frontend/logic/profile/profile_bloc.dart';
 import 'package:frontend/logic/task/available_tasks_bloc.dart';
 import 'package:frontend/logic/task/task_bloc.dart';
 import 'package:frontend/logic/task/task_details_bloc.dart';
+import 'package:frontend/presentation/admin_web/views/admin_comms_screen.dart';
+import 'package:frontend/presentation/admin_web/views/admin_incidents_screen.dart';
 import 'package:frontend/presentation/auth/guardian_nomination_screen.dart';
 import 'package:frontend/presentation/auth/volunteer_registration_step1.dart';
 import 'package:frontend/presentation/auth/volunteer_registration_step2.dart';
@@ -31,6 +33,7 @@ import 'package:frontend/presentation/volunteer/dashboard/volunteer_maps_screen.
 import 'package:frontend/presentation/volunteer/dashboard/volunteer_profile_screen.dart';
 import 'package:frontend/presentation/volunteer/volunteer_main_screen.dart';
 import 'package:frontend/data/session_manager.dart';
+import 'package:frontend/presentation/widgets/responsive_layout.dart';
 import 'presentation/theme/tactical_theme.dart';
 import 'presentation/auth/login_screen.dart';
 import 'presentation/auth/citizen_registration.dart';
@@ -76,7 +79,6 @@ class EchoNetApp extends StatelessWidget {
           BlocProvider(create: (context) => IncidentBloc(context.read<IncidentRepository>())),
           BlocProvider(create: (context) => TaskBloc(context.read<TaskRepository>())),
           BlocProvider(create: (context) => IncidentHistoryBloc(context.read<IncidentRepository>())),
-          // UPDATED: Injected WebSocketService into Chat and AvailableTasks Blocs
           BlocProvider(create: (context) => ChatBloc(context.read<ChatRepository>(), context.read<WebSocketService>())),
           BlocProvider(create: (context) => AvailableTasksBloc(context.read<IncidentRepository>(), context.read<WebSocketService>())),
           BlocProvider(create: (context) => TaskDetailsBloc(context.read<TaskRepository>())),
@@ -84,7 +86,8 @@ class EchoNetApp extends StatelessWidget {
           BlocProvider(create: (context) => LocationTrackingBloc(context.read<WebSocketService>())),
         ],
         child: ScreenUtilInit(
-          designSize: const Size(411.42857142857144, 899.4285714285714), 
+          // designSize: const Size(411.42857142857144, 899.4285714285714),
+          designSize: const Size(1888, 938),
           minTextAdapt: true,
           splitScreenMode: true,
           builder: (context, child) {
@@ -110,6 +113,44 @@ class EchoNetApp extends StatelessWidget {
                 '/volunteer_messages': (context) => const MessagesScreen(),
                 '/volunteer_maps': (context) => const VolunteerMapsScreen(),
                 '/volunteer_profile': (context) => const VolunteerProfileScreen(),
+                '/admin_dashboard': (context) => ResponsiveLayout(
+                  desktopView: const AdminCommsScreen(),
+                  mobileView: Scaffold(
+                    backgroundColor: TacticalColors.background,
+                    body: Padding(
+                      padding: const EdgeInsets.all(32.0),
+                      child: Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.desktop_windows, color: TacticalColors.primaryContainer, size: 64),
+                            const SizedBox(height: 24),
+                            const Text(
+                              "COMMAND CENTER UNAVAILABLE",
+                              style: TextStyle(fontFamily: 'Space Grotesk', fontSize: 24, fontWeight: FontWeight.w900, color: Colors.white),
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 16),
+                            const Text(
+                              "The EchoNet Admin Dashboard requires a desktop view (width > 1000px). Please maximize your window or use a computer.",
+                              style: TextStyle(color: Colors.white54, fontSize: 14, height: 1.5),
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 32),
+                            // Option to log out and go back to login screen
+                            TextButton(
+                              onPressed: () => Navigator.pushReplacementNamed(context, '/'),
+                              child: const Text(
+                                "RETURN TO LOGIN",
+                                style: TextStyle(color: TacticalColors.primaryContainer, fontWeight: FontWeight.bold, letterSpacing: 1.5),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
               },
             );
           },

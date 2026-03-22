@@ -33,8 +33,13 @@ class _LoginScreenState extends State<LoginScreen> {
       body: BlocConsumer<LoginBloc, LoginState>(
         listener: (context, state) {
           if (state is LoginSuccess) {
-            final route = state.role == 'CITIZEN' ? '/citizen_dashboard' : '/volunteer_dashboard';
-            Navigator.pushNamedAndRemoveUntil(context, route, (route) => false);
+            if (state.role == 'AUTHORITY' || state.role == 'NGO') {
+              Navigator.pushReplacementNamed(context, '/admin_dashboard');
+            } else if (state.role == 'VOLUNTEER') {
+              Navigator.pushReplacementNamed(context, '/volunteer_dashboard');
+            } else {
+              Navigator.pushReplacementNamed(context, '/citizen_dashboard');
+            }
           } else if (state is LoginFailure) {
             ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(state.error), backgroundColor: TacticalColors.errorContainer));
           }
@@ -59,13 +64,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         SizedBox(height: 24.h),
                         // UPDATED: Added isNumeric: true and removed spaces from hint
-                        TacticalTextField(
-                          label: "PHONE NUMBER",
-                          hint: "910000000000",
-                          icon: Icons.phone_android,
-                          controller: _phoneController,
-                          isNumeric: true,
-                        ),
+                        TacticalTextField(label: "PHONE NUMBER", hint: "910000000000", icon: Icons.phone_android, controller: _phoneController, isNumeric: true),
                         SizedBox(height: 20.h),
                         TacticalTextField(label: "PASSWORD", hint: "••••••••", icon: Icons.lock_outline, controller: _passwordController),
                         SizedBox(height: 32.h),
@@ -74,9 +73,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           isLoading: state is LoginLoading,
                           onPressed: () {
                             // UPDATED: Added .trim() to ensure no accidental spaces are submitted
-                            context.read<LoginBloc>().add(
-                              SubmitLogin(phone: _phoneController.text.trim(), password: _passwordController.text.trim()),
-                            );
+                            context.read<LoginBloc>().add(SubmitLogin(phone: _phoneController.text.trim(), password: _passwordController.text.trim()));
                           },
                         ),
                       ],
@@ -120,13 +117,7 @@ class _LoginScreenState extends State<LoginScreen> {
       children: [
         Text(
           "ECHONET",
-          style: TextStyle(
-            fontFamily: 'Space Grotesk',
-            fontSize: 48.sp,
-            fontWeight: FontWeight.w900,
-            letterSpacing: 4.0,
-            color: TacticalColors.onSurface,
-          ),
+          style: TextStyle(fontFamily: 'Space Grotesk', fontSize: 48.sp, fontWeight: FontWeight.w900, letterSpacing: 4.0, color: TacticalColors.onSurface),
         ),
         SizedBox(height: 8.h),
         Text(
@@ -137,13 +128,7 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Widget _buildPathCard({
-    required String title,
-    required String subtitle,
-    required IconData icon,
-    required Color accentColor,
-    required VoidCallback onTap,
-  }) {
+  Widget _buildPathCard({required String title, required String subtitle, required IconData icon, required Color accentColor, required VoidCallback onTap}) {
     return GestureDetector(
       onTap: onTap,
       child: TacticalCard(

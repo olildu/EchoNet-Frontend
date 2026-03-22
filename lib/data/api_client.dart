@@ -13,6 +13,20 @@ class ApiClient {
     }
   }
 
+  // Add this inside the ApiClient class, right below your post() method
+  Future<dynamic> getReq(String endpoint) async {
+    try {
+      final response = await http.get(Uri.parse('$baseUrl$endpoint'));
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return jsonDecode(response.body);
+      } else {
+        throw Exception('API Error: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception(e.toString());
+    }
+  }
+
   // NEW: Added PUT method to handle status updates
   Future<Map<String, dynamic>> put(String endpoint, Map<String, dynamic> body) async {
     try {
