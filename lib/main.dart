@@ -17,6 +17,7 @@ import 'package:frontend/logic/profile/profile_bloc.dart';
 import 'package:frontend/logic/task/available_tasks_bloc.dart';
 import 'package:frontend/logic/task/task_bloc.dart';
 import 'package:frontend/logic/task/task_details_bloc.dart';
+import 'package:frontend/presentation/admin_web/admin_main_screen.dart';
 import 'package:frontend/presentation/admin_web/views/admin_comms_screen.dart';
 import 'package:frontend/presentation/admin_web/views/admin_incidents_screen.dart';
 import 'package:frontend/presentation/auth/guardian_nomination_screen.dart';
@@ -49,7 +50,10 @@ void main() async {
   String initialRoute = '/';
   if (role == 'CITIZEN') {
     initialRoute = '/citizen_dashboard';
-  } else if (role != null && role.isNotEmpty) {
+  } else if (role == 'AUTHORITY' || role == 'NGO') {
+    // FIX: Route admins to the web dashboard at startup
+    initialRoute = '/admin_dashboard';
+  } else if (role == 'VOLUNTEER') {
     initialRoute = '/volunteer_dashboard';
   }
 
@@ -86,8 +90,7 @@ class EchoNetApp extends StatelessWidget {
           BlocProvider(create: (context) => LocationTrackingBloc(context.read<WebSocketService>())),
         ],
         child: ScreenUtilInit(
-          // designSize: const Size(411.42857142857144, 899.4285714285714),
-          designSize: const Size(1888, 938),
+          designSize: MediaQuery.of(context).size.width > 1000 ? const Size(1888, 938) : const Size(411.42857142857144, 899.4285714285714),
           minTextAdapt: true,
           splitScreenMode: true,
           builder: (context, child) {
@@ -113,44 +116,7 @@ class EchoNetApp extends StatelessWidget {
                 '/volunteer_messages': (context) => const MessagesScreen(),
                 '/volunteer_maps': (context) => const VolunteerMapsScreen(),
                 '/volunteer_profile': (context) => const VolunteerProfileScreen(),
-                '/admin_dashboard': (context) => ResponsiveLayout(
-                  desktopView: const AdminCommsScreen(),
-                  mobileView: Scaffold(
-                    backgroundColor: TacticalColors.background,
-                    body: Padding(
-                      padding: const EdgeInsets.all(32.0),
-                      child: Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(Icons.desktop_windows, color: TacticalColors.primaryContainer, size: 64),
-                            const SizedBox(height: 24),
-                            const Text(
-                              "COMMAND CENTER UNAVAILABLE",
-                              style: TextStyle(fontFamily: 'Space Grotesk', fontSize: 24, fontWeight: FontWeight.w900, color: Colors.white),
-                              textAlign: TextAlign.center,
-                            ),
-                            const SizedBox(height: 16),
-                            const Text(
-                              "The EchoNet Admin Dashboard requires a desktop view (width > 1000px). Please maximize your window or use a computer.",
-                              style: TextStyle(color: Colors.white54, fontSize: 14, height: 1.5),
-                              textAlign: TextAlign.center,
-                            ),
-                            const SizedBox(height: 32),
-                            // Option to log out and go back to login screen
-                            TextButton(
-                              onPressed: () => Navigator.pushReplacementNamed(context, '/'),
-                              child: const Text(
-                                "RETURN TO LOGIN",
-                                style: TextStyle(color: TacticalColors.primaryContainer, fontWeight: FontWeight.bold, letterSpacing: 1.5),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
+                '/admin_dashboard': (context) => const AdminMainScreen(),
               },
             );
           },

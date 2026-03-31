@@ -25,12 +25,17 @@ class SubmitVolunteerRegistration extends RegistrationEvent {
 
 // --- STATES ---
 abstract class RegistrationState {}
+
 class RegistrationInitial extends RegistrationState {}
+
 class RegistrationLoading extends RegistrationState {}
+
 class RegistrationSuccess extends RegistrationState {
   final String userId;
-  RegistrationSuccess(this.userId);
+  final String role; // <-- PASS THE ROLE
+  RegistrationSuccess(this.userId, {this.role = "CITIZEN"});
 }
+
 class RegistrationFailure extends RegistrationState {
   final String error;
   RegistrationFailure(this.error);
@@ -45,19 +50,9 @@ class RegistrationBloc extends Bloc<RegistrationEvent, RegistrationState> {
     on<SubmitCitizenRegistration>((event, emit) async {
       emit(RegistrationLoading());
       try {
-        final response = await repository.registerCitizen(
-          fullName: event.name,
-          phone: event.phone,
-          nationalId: event.nationalId,
-        );
-        // PERSISTENCE: Save Citizen session
-        await sessionManager.saveSession(
-          response['access_token'],
-          response['user_id'].toString(),
-          response['user_role'],
-          response['full_name'],
-        );
-        emit(RegistrationSuccess(response['user_id'].toString()));
+        final response = await repository.registerCitizen(fullName: event.name, phone: event.phone, nationalId: event.nationalId);
+        await sessionManager.saveSession(response['access_token'], response['user_id'].toString(), response['user_role'], response['full_name']);
+        emit(RegistrationSuccess(response['user_id'].toString(), role: response['user_role']));
       } catch (e) {
         emit(RegistrationFailure(e.toString().replaceAll('Exception: ', '')));
       }
@@ -67,7 +62,7 @@ class RegistrationBloc extends Bloc<RegistrationEvent, RegistrationState> {
       emit(RegistrationLoading());
       try {
         await repository.saveEmergencyContacts(userId: event.userId, contacts: event.contacts);
-        emit(RegistrationSuccess(event.userId));
+        emit(RegistrationSuccess(event.userId, role: 'CITIZEN'));
       } catch (e) {
         emit(RegistrationFailure(e.toString().replaceAll('Exception: ', '')));
       }
@@ -84,16 +79,11 @@ class RegistrationBloc extends Bloc<RegistrationEvent, RegistrationState> {
           role: _mapOrgToRole(event.data['org']),
           skills: _mapSkillsToEnums(event.data['skills']),
         );
-        
-        // PERSISTENCE: Save Volunteer session
-        await sessionManager.saveSession(
-          response['access_token'],
-          response['user_id'].toString(),
-          response['user_role'],
-          response['full_name'],
-        );
-        
-        emit(RegistrationSuccess("volunteer_complete"));
+
+        await sessionManager.saveSession(response['access_token'], response['user_id'].toString(), response['user_role'], response['full_name']);
+
+        // Emit success with the actual role from the backend (AUTHORITY, NGO, or VOLUNTEER)
+        emit(RegistrationSuccess("volunteer_complete", role: response['user_role']));
       } catch (e) {
         emit(RegistrationFailure(e.toString().replaceAll('Exception: ', '')));
       }
@@ -108,14 +98,19 @@ class RegistrationBloc extends Bloc<RegistrationEvent, RegistrationState> {
 
   List<String> _mapSkillsToEnums(List<String> skills) {
     final map = {
-      "FIRST AID": "MEDICAL", "MEDICAL\nASSISTANCE": "MEDICAL",
-      "FIRE SAFETY": "FIRE", "FIREFIGHTING\nBASICS": "FIRE",
-      "RESCUE\nOPERATIONS": "RESCUE", "SWIMMING /\nLIFEGUARD": "RESCUE",
-      "BOAT\nHANDLING": "RESCUE", "LOGISTICS /\nDISTRIBUTION": "FOOD_SUPPLY",
-      "SHELTER\nMANAGEMENT": "SHELTER", "COUNSELING /\nMENTAL SUPPORT": "MENTAL_HEALTH",
-      "SEARCH &\nMISSING PERSON": "MISSING_PERSON", "DEBRIS\nREMOVAL": "INFRASTRUCTURE",
+      "FIRST AID": "MEDICAL",
+      "MEDICAL\nASSISTANCE": "MEDICAL",
+      "FIRE SAFETY": "FIRE",
+      "FIREFIGHTING\nBASICS": "FIRE",
+      "RESCUE\nOPERATIONS": "RESCUE",
+      "SWIMMING /\nLIFEGUARD": "RESCUE",
+      "BOAT\nHANDLING": "RESCUE",
+      "LOGISTICS /\nDISTRIBUTION": "FOOD_SUPPLY",
+      "SHELTER\nMANAGEMENT": "SHELTER",
+      "COUNSELING /\nMENTAL SUPPORT": "MENTAL_HEALTH",
+      "SEARCH &\nMISSING PERSON": "MISSING_PERSON",
+      "DEBRIS\nREMOVAL": "INFRASTRUCTURE",
     };
-    // FIX: Added .toSet() to automatically strip out any duplicates before sending
     return skills.map((s) => map[s] ?? "GENERAL").toSet().toList();
   }
 }

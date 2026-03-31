@@ -57,15 +57,29 @@ class _VolunteerDashboardState extends State<VolunteerDashboard> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocListener<TaskBloc, TaskState>(
-      listener: (context, state) {
-        if (state is TaskAcceptedSuccess) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(state.message), backgroundColor: TacticalColors.secondaryContainer));
-          context.read<AvailableTasksBloc>().add(FetchAvailableTasks());
-        } else if (state is TaskFailure) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(state.error), backgroundColor: TacticalColors.errorContainer));
-        }
-      },
+    return MultiBlocListener(
+      listeners: [
+        BlocListener<TaskBloc, TaskState>(
+          listener: (context, state) {
+            if (state is TaskAcceptedSuccess) {
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(state.message), backgroundColor: TacticalColors.secondaryContainer));
+              context.read<AvailableTasksBloc>().add(FetchAvailableTasks());
+            } else if (state is TaskFailure) {
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(state.error), backgroundColor: TacticalColors.errorContainer));
+            }
+          },
+        ),
+        // Listen to ProfileBloc to set the initial switch state correctly from the backend
+        BlocListener<ProfileBloc, ProfileState>(
+          listener: (context, state) {
+            if (state is ProfileLoaded) {
+              setState(() {
+                _isAvailable = state.stats['is_active'] ?? false;
+              });
+            }
+          },
+        ),
+      ],
       child: Scaffold(
         backgroundColor: TacticalColors.background,
         body: RefreshIndicator(
@@ -365,7 +379,6 @@ class _VolunteerDashboardState extends State<VolunteerDashboard> {
   Widget _buildAppBar() {
     return Row(
       children: [
-        // UPDATED: Using a generic person icon instead of dummy URL
         Container(
           width: 40.w,
           height: 40.w,
@@ -409,12 +422,27 @@ class _VolunteerDashboardState extends State<VolunteerDashboard> {
               ),
               SizedBox(height: 4.h),
               Text(
-                "You are Available",
+                _isAvailable ? "You are Available" : "You are Offline", // Dynamic Text
                 style: TextStyle(color: Colors.white, fontSize: 18.sp, fontWeight: FontWeight.bold),
               ),
             ],
           ),
-          Switch(value: _isAvailable, activeColor: TacticalColors.secondaryContainer, onChanged: (val) => setState(() => _isAvailable = val)),
+          Switch(
+            value: _isAvailable,
+            activeColor: TacticalColors.secondaryContainer,
+            onChanged: (val) async {
+              // Optimistically update the UI instantly
+              setState(() => _isAvailable = val);
+
+              // Trigger the database update
+              final userId = await SessionManager().getUserId();
+              if (userId != null) {
+                if (context.mounted) {
+                  context.read<ProfileBloc>().add(ToggleAvailability(userId, val));
+                }
+              }
+            },
+          ),
         ],
       ),
     );

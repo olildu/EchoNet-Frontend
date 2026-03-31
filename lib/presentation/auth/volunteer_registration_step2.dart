@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart'; // Added missing import
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:frontend/logic/registration/registration_bloc.dart';
 import '../theme/tactical_theme.dart';
 import 'package:frontend/presentation/widgets/tactical_app_bar.dart';
@@ -36,13 +36,17 @@ class _VolunteerRegistrationStep2State extends State<VolunteerRegistrationStep2>
 
   @override
   Widget build(BuildContext context) {
-    // Retrieve the multi-step data passed from Step 1
     final step1Data = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
 
     return BlocListener<RegistrationBloc, RegistrationState>(
       listener: (context, state) {
         if (state is RegistrationSuccess && state.userId == "volunteer_complete") {
-          Navigator.pushNamedAndRemoveUntil(context, '/volunteer_dashboard', (route) => false);
+          // FIX: Check for authority roles to route to the correct dashboard
+          if (state.role == 'AUTHORITY' || state.role == 'NGO') {
+            Navigator.pushNamedAndRemoveUntil(context, '/admin_dashboard', (route) => false);
+          } else {
+            Navigator.pushNamedAndRemoveUntil(context, '/volunteer_dashboard', (route) => false);
+          }
         } else if (state is RegistrationFailure) {
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(state.error), backgroundColor: TacticalColors.errorContainer));
         }
@@ -79,7 +83,6 @@ class _VolunteerRegistrationStep2State extends State<VolunteerRegistrationStep2>
                     const SizedBox(height: 8),
                     const Text("You can choose more than one", style: TextStyle(color: Colors.white54, fontSize: 14)),
                     const SizedBox(height: 32),
-
                     GridView.builder(
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
@@ -215,7 +218,7 @@ class _VolunteerRegistrationStep2State extends State<VolunteerRegistrationStep2>
               children: [
                 Icon(Icons.chevron_left, color: Colors.white54, size: 20),
                 SizedBox(width: 4),
-                const Text(
+                Text(
                   "BACK",
                   style: TextStyle(color: Colors.white54, fontSize: 12, fontWeight: FontWeight.w900, letterSpacing: 1.5),
                 ),
@@ -230,7 +233,6 @@ class _VolunteerRegistrationStep2State extends State<VolunteerRegistrationStep2>
                   text: "NEXT",
                   isLoading: state is RegistrationLoading,
                   onPressed: () {
-                    // Combine step 1 data with selected skills and submit
                     context.read<RegistrationBloc>().add(SubmitVolunteerRegistration({...step1Data, "skills": _selectedSkills}));
                   },
                 );

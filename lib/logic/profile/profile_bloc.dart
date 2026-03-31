@@ -9,6 +9,13 @@ class FetchProfileStats extends ProfileEvent {
   FetchProfileStats(this.userId);
 }
 
+// NEW: Event to toggle status
+class ToggleAvailability extends ProfileEvent {
+  final String userId;
+  final bool isActive;
+  ToggleAvailability(this.userId, this.isActive);
+}
+
 // STATES
 abstract class ProfileState {}
 
@@ -36,6 +43,17 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
       try {
         final stats = await repository.getVolunteerStats(event.userId);
         emit(ProfileLoaded(stats));
+      } catch (e) {
+        emit(ProfileError(e.toString().replaceAll('Exception: ', '')));
+      }
+    });
+
+    // NEW: Handle the toggle event
+    on<ToggleAvailability>((event, emit) async {
+      try {
+        await repository.updateAvailability(event.userId, event.isActive);
+        // Refresh the profile stats so the UI stays completely in sync with the DB
+        add(FetchProfileStats(event.userId));
       } catch (e) {
         emit(ProfileError(e.toString().replaceAll('Exception: ', '')));
       }

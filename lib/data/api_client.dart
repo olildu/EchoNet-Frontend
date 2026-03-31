@@ -1,8 +1,23 @@
 import 'dart:convert';
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 class ApiClient {
-  final String baseUrl = "http://192.168.137.1:8000";
+  late final String baseUrl;
+
+  ApiClient() {
+    if (kIsWeb) {
+      // Web runs in browser → localhost works
+      baseUrl = "http://127.0.0.1:8000";
+    } else if (Platform.isAndroid || Platform.isIOS) {
+      // Mobile → use your PC IP
+      baseUrl = "http://192.168.137.1:8000";
+    } else {
+      // Desktop (Windows/Mac/Linux)
+      baseUrl = "http://127.0.0.1:8000";
+    }
+  }
 
   Future<Map<String, dynamic>> post(String endpoint, Map<String, dynamic> body) async {
     try {
